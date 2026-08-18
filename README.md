@@ -1,98 +1,103 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Desafio Técnico - API de Notícias
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Bem-vindo ao repositório do backend do Desafio Técnico. Este projeto foi desenvolvido em **NestJS**, utilizando **Prisma ORM** e banco de dados **PostgreSQL**. A documentação abaixo visa guiá-lo no processo de configuração, execução e testes, tanto no ambiente Docker quanto localmente.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 📋 1. Pré-requisitos
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Para rodar o projeto de qualquer uma das formas, garanta que seu ambiente possui:
+- [Git](https://git-scm.com/) (para clonagem do repositório)
+- [Node.js](https://nodejs.org/en/) (Versão 22+ recomendada)
+- [Docker](https://www.docker.com/products/docker-desktop/) e [Docker Compose](https://docs.docker.com/compose/install/)
 
-## Project setup
+---
 
+## 🐳 2. Executando com Docker (Recomendado)
+
+O projeto está totalmente configurado para rodar os serviços (Banco de Dados, Backend e Frontend) integrados.
+
+### Passos:
+1. Navegue até a pasta `backend` onde o `docker-compose.yml` está localizado.
+2. Construa e suba os contêineres executando o comando:
+   ```bash
+   docker-compose up -d --build
+   ```
+3. O `docker-compose` irá inicializar 3 serviços:
+   - **Postgres**: na porta `5432`
+   - **Backend**: na porta `3000` (Acesso via http://localhost:3000)
+   - **Frontend**: na porta `5173` (Acesso via http://localhost:5173)
+
+> **Importante:** Como o banco de dados sobe vazio na primeira vez, os contêineres cuidarão da execução e o *Prisma Client* já é gerado dentro do contêiner da API.
+
+### Para parar a execução:
 ```bash
-$ npm install
+docker-compose down
 ```
 
-## Compile and run the project
+---
 
+## 💻 3. Executando Localmente (Desenvolvimento)
+
+Caso você deseje desenvolver ou rodar a aplicação nativamente sem colocar o código do backend no Docker:
+
+### Passo 3.1: Subir apenas o Banco de Dados
+O backend precisará do PostgreSQL ativo. Você pode utilizar o Docker apenas para subir o banco:
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker-compose up -d postgres
 ```
 
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+### Passo 3.2: Variáveis de Ambiente
+O projeto lê variáveis de ambiente diretamente do arquivo `.env` localizado na raiz do `/backend`. Por padrão, ele está configurado como:
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/noticias?schema=public"
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### Passo 3.3: Instalação das dependências
+Na raiz da pasta `/backend`, instale as bibliotecas necessárias utilizando o NPM:
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Passo 3.4: Sincronização e geração do Prisma
+Sincronize o esquema com o banco de dados (o comando abaixo irá criar as tabelas ausentes e gerar o `Prisma Client` tipado):
+```bash
+npx prisma db push
+```
 
-## Resources
+### Passo 3.5: Rodar a aplicação
+Por fim, inicie o servidor da API NestJS em modo observador (watch):
+```bash
+npm run start:dev
+```
+A API iniciará no endereço http://localhost:3000.
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## 🧪 4. Testes Automatizados
 
-## Support
+A suíte de testes da aplicação foi estruturada usando **Jest**. Certifique-se de ter rodado o `npm install` localmente para que o framework de testes esteja disponível.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Abra um terminal na pasta do `backend` e utilize os comandos abaixo conforme a necessidade:
 
-## Stay in touch
+- **Rodar todos os testes unitários:**
+  ```bash
+  npm run test
+  ```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- **Rodar testes no modo watch (Observação contínua):**
+  Excelente para TDD. Ele irá re-executar os testes assim que você salvar uma alteração no código.
+  ```bash
+  npm run test:watch
+  ```
 
-## License
+- **Verificar a Cobertura de Código (Coverage):**
+  O comando gera um relatório completo mostrando as porcentagens de linhas e funções testadas no projeto.
+  ```bash
+  npm run test:cov
+  ```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **Rodar testes de Integração / E2E (End-to-End):**
+  ```bash
+  npm run test:e2e
+  ```
