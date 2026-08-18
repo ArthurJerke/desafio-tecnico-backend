@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CriarNoticiaDto } from './dto/criar-noticia.dto.js';
 import { EditarNoticiaDto } from './dto/editar-noticia.dto.js';
+import { FiltroListaNoticiasDto } from './dto/filtro-lista-noticias-dto.js';
 
 @Injectable()
 export class NoticiasService {
@@ -13,8 +14,56 @@ export class NoticiasService {
         return this.prisma.noticia.create({ data })
     }
 
-    listarNoticias() {
-        return this.prisma.noticia.findMany();
+    async listarNoticias(filtro: FiltroListaNoticiasDto) {
+        const titulo = filtro.titulo?.trim() ? filtro.titulo.trim() : undefined;
+
+        const descricao = filtro.descricao?.trim() ? filtro.descricao.trim() : undefined;
+
+        const pagina = filtro.pagina ?? 1;
+        const limite = filtro.limite ?? 10;
+
+        const where = {
+            titulo: titulo
+                ? {
+                    contains: titulo,
+                    mode: 'insensitive' as const,
+                }
+                : undefined,
+
+            descricao: descricao
+                ? {
+                    contains: descricao,
+                    mode: 'insensitive' as const,
+                }
+                : undefined,
+        };
+
+        const skip = (pagina - 1) * limite;
+
+        const [noticias, total] = await Promise.all([
+            this.prisma.noticia.findMany({
+                where,
+                orderBy: {
+                    id: 'desc',
+                },
+                skip,
+                take: limite,
+            }),
+
+            this.prisma.noticia.count({
+                where,
+            }),
+        ]);
+
+        return {
+            data: noticias,
+            meta: {
+                total,
+                pagina,
+                limite,
+                totalPaginas: Math.ceil(total / limite),
+            },
+        };
     }
 
     async buscarNoticia(id: number) {
