@@ -1,13 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CriarNoticiaDto } from './dto/criar-noticia.dto.js';
 import { EditarNoticiaDto } from './dto/editar-noticia.dto.js';
 import { FiltroListaNoticiasDto } from './dto/filtro-lista-noticias-dto.js';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class NoticiasService {
     constructor(
         private readonly prisma: PrismaService,
+
+        @Inject(CACHE_MANAGER)
+        private readonly cacheManager: Cache,
     ) { }
 
     criarNoticia(data: CriarNoticiaDto) {
@@ -21,6 +26,14 @@ export class NoticiasService {
 
         const pagina = filtro.pagina ?? 1;
         const limite = filtro.limite ?? 10;
+
+        const cacheKey = `noticias:${titulo ?? ''}:${descricao ?? ''}:${pagina}:${limite}`;
+
+        const cached = await this.cacheManager.get(cacheKey);
+
+        if (cached) {
+            return cached;
+        }
 
         const where = {
             titulo: titulo
@@ -55,7 +68,7 @@ export class NoticiasService {
             }),
         ]);
 
-        return {
+        const resultado = {
             data: noticias,
             meta: {
                 total,
@@ -64,6 +77,10 @@ export class NoticiasService {
                 totalPaginas: Math.ceil(total / limite),
             },
         };
+
+        await this.cacheManager.set(cacheKey, resultado);
+
+        return resultado;
     }
 
     async buscarNoticia(id: number) {
