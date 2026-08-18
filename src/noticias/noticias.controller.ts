@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { NoticiasService } from './noticias.service.js';
 import { CriarNoticiaDto } from './dto/criar-noticia.dto.js';
 import { EditarNoticiaDto } from './dto/editar-noticia.dto.js';
+import { FiltroListaNoticiasDto } from './dto/filtro-lista-noticias-dto.js';
 
 @Controller('noticias')
 export class NoticiasController {
@@ -14,8 +15,8 @@ export class NoticiasController {
     }
 
     @Get()
-    listarNoticias() {
-        return this.noticiasService.listarNoticias();
+    listarNoticias(@Query() filtro: FiltroListaNoticiasDto) {
+        return this.noticiasService.listarNoticias(filtro);
     }
 
     @Get(':id')
